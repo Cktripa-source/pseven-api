@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
+require('dotenv').config();
 
 // Import routes
 const productRoutes = require('./routes/productRoutes');
@@ -18,7 +19,7 @@ app.use(cors()); // Enable CORS for all routes
 app.use(express.json()); // Parse incoming JSON requests
 
 // MongoDB connection
-const mongoURI = 'mongodb://127.0.0.1:27017/pseven'; // MongoDB URI
+const mongoURI = process.env.MONGODB_CONNECT_URI; // MongoDB URI
 mongoose.connect(mongoURI)
   .then(() => console.log('Connected to MongoDB successfully!'))
   .catch(err => {
