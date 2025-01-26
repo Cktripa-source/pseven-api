@@ -21,12 +21,17 @@ app.use(express.json()); // Parse incoming JSON requests
 
 // MongoDB connection
 const mongoURI = process.env.MONGODB_CONNECT_URI; // MongoDB URI
-mongoose.connect(mongoURI)
+
+mongoose.connect(mongoURI, {
+  serverSelectionTimeoutMS: 5000, // Timeout for selecting the server
+  socketTimeoutMS: 45000, // Timeout for socket operations (queries)
+})
   .then(() => console.log('Connected to MongoDB successfully!'))
-  .catch(err => {
+  .catch((err) => {
     console.error('MongoDB connection error:', err.message);
     process.exit(1); // Exit process if DB connection fails
   });
+
 
 // Use routes
 app.use('/api', productRoutes);

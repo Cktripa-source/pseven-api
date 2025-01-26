@@ -1,8 +1,5 @@
-// models/Product.js
-
 const mongoose = require('mongoose');
 
-// Define the product schema
 const productSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -17,8 +14,7 @@ const productSchema = new mongoose.Schema({
     required: true,
   },
   image: {
-    type: String,
-    required: true,
+    type: String,  // Path to image file
   },
   category: {
     type: String,
@@ -30,7 +26,4 @@ const productSchema = new mongoose.Schema({
   },
 });
 
-// Create a model for the product
-const Product = mongoose.model('Product', productSchema);
-
-module.exports = Product;
+module.exports = mongoose.model('Product', productSchema);
