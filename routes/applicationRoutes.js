@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const Application = require('../models/Application'); // Import the Application model
+const Application = require('../models/application'); // Import the Application model
 const Job = require('../models/Jobs'); // Import the Job model
 
 // GET: Fetch all applications
