@@ -36,9 +36,9 @@ mongoose.connect(mongoURI, {
 // Use routes
 app.use('/api', productRoutes);
 app.use('/api/auth', authRoutes);
-app.use('/api/login', loginRoutes); // Use authentication routes here
-app.use('/api/jobs', jobRoutes); // Use job routes
-app.use('/api/applications', applicationRoutes); // Use application routes
+app.use('/api/login', loginRoutes);
+app.use('/api/jobs', jobRoutes);
+app.use('/api/applications', applicationRoutes);
 
 // Serve static images from the 'uploads' folder
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
