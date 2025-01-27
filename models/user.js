@@ -1,4 +1,3 @@
-// models/User.js
 const mongoose = require('mongoose');
 
 const UserSchema = new mongoose.Schema({
@@ -6,7 +5,7 @@ const UserSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   agreeToTerms: { type: Boolean, required: true },
-  burned: { type: Boolean, default: false }, // New field to mark burned accounts
+  burned: { type: Boolean, default: false }, // Indicates if the account is restricted
 });
 
 module.exports = mongoose.model('User', UserSchema);

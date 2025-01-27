@@ -4,13 +4,14 @@ const cors = require('cors');
 const path = require('path');
 require('dotenv').config(); // Ensure dotenv is being loaded
 
-
 // Import routes
 const productRoutes = require('./routes/productRoutes');
 const authRoutes = require('./routes/auth');
 const loginRoutes = require('./routes/login');
-const jobRoutes = require('./routes/jobRoutes'); // Import job routes
-const applicationRoutes = require('./routes/applicationRoutes'); // Import application routes
+const jobRoutes = require('./routes/jobRoutes');
+const applicationRoutes = require('./routes/applicationRoutes');
+const serviceRoutes = require('./routes/serviceRoutes');
+const requestHelpServiceRoutes = require('./routes/requestHelpServiceRoutes'); // Import request help service routes
 
 // Initialize Express app
 const app = express();
@@ -20,11 +21,11 @@ app.use(cors()); // Enable CORS for all routes
 app.use(express.json()); // Parse incoming JSON requests
 
 // MongoDB connection
-const mongoURI = process.env.MONGODB_CONNECT_URI; // MongoDB URI
+const mongoURI = process.env.MONGODB_CONNECT_URI;
 
 mongoose.connect(mongoURI, {
   serverSelectionTimeoutMS: 5000, // Timeout for selecting the server
-  socketTimeoutMS: 45000, // Timeout for socket operations (queries)
+  socketTimeoutMS: 45000, // Timeout for socket operations
 })
   .then(() => console.log('Connected to MongoDB successfully!'))
   .catch((err) => {
@@ -32,13 +33,14 @@ mongoose.connect(mongoURI, {
     process.exit(1); // Exit process if DB connection fails
   });
 
-
 // Use routes
 app.use('/api', productRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/login', loginRoutes);
 app.use('/api/jobs', jobRoutes);
 app.use('/api/applications', applicationRoutes);
+app.use('/api', serviceRoutes);
+app.use('/api/help-requests', requestHelpServiceRoutes); // Use request help service routes
 
 // Serve static images from the 'uploads' folder
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
