@@ -52,6 +52,29 @@ router.post('/:jobId/apply', async (req, res) => {
   }
 });
 
+// PUT: Update an application by ID
+router.put('/:id', async (req, res) => {
+  const { id } = req.params;
+  const { fullName, email, cvLink, coverLetter, status } = req.body;
+
+  try {
+    const updatedApplication = await Application.findByIdAndUpdate(
+      id,
+      { fullName, email, cvLink, coverLetter, status },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedApplication) {
+      return res.status(404).json({ message: 'Application not found' });
+    }
+
+    res.status(200).json({ message: 'Application updated successfully', application: updatedApplication });
+  } catch (err) {
+    console.error('Error updating application:', err);
+    res.status(500).json({ message: 'Failed to update application', error: err.message });
+  }
+});
+
 // DELETE: Delete an application by ID
 router.delete('/:id', async (req, res) => {
   const { id } = req.params;

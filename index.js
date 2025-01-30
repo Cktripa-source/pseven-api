@@ -12,6 +12,7 @@ const jobRoutes = require('./routes/jobRoutes');
 const applicationRoutes = require('./routes/applicationRoutes');
 const serviceRoutes = require('./routes/serviceRoutes');
 const requestHelpServiceRoutes = require('./routes/requestHelpServiceRoutes'); // Import request help service routes
+const dashboardRoutes = require('./routes/dashboardRoutes'); // Import the dashboard routes
 
 // Initialize Express app
 const app = express();
@@ -36,11 +37,17 @@ mongoose.connect(mongoURI, {
 // Use routes
 app.use('/api', productRoutes);
 app.use('/api/auth', authRoutes);
-app.use('/api/login', loginRoutes);
+app.use('/api/auth/login', loginRoutes);
 app.use('/api/jobs', jobRoutes);
 app.use('/api/applications', applicationRoutes);
 app.use('/api', serviceRoutes);
 app.use('/api/help-requests', requestHelpServiceRoutes); // Use request help service routes
+app.use('/api/dashboard', dashboardRoutes); // Use the new dashboard routes
+
+// Health check route
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'Server is healthy' });
+});
 
 // Serve static images from the 'uploads' folder
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

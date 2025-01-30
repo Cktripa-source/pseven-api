@@ -6,12 +6,12 @@ const router = express.Router();
 
 // Set up multer storage configuration
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-      cb(null, './uploads'); // The image should be saved inside 'uploads' folder
-    },
-    filename: (req, file, cb) => {
-      cb(null, Date.now() + path.extname(file.originalname)); // Use timestamp to avoid name conflicts
-    },
+  destination: (req, file, cb) => {
+    cb(null, './uploads'); // The image should be saved inside 'uploads' folder
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname)); // Use timestamp to avoid name conflicts
+  },
 });
 
 // Initialize multer
@@ -46,7 +46,6 @@ router.post('/products', upload.single('image'), async (req, res) => {
 router.get('/products', async (req, res) => {
   try {
     const products = await Product.find();
-    console.log('Products:', products);  // Log to check the results
     res.status(200).json(products);
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -66,7 +65,6 @@ router.get('/products/:id', async (req, res) => {
   }
 });
 
-// Update a product by id with image upload
 // Update a product by id with image upload
 router.put('/products/:id', upload.single('image'), async (req, res) => {
   const { name, description, price, category, stock } = req.body;

@@ -80,15 +80,16 @@ router.put('/services/:id', upload.single('image'), async (req, res) => {
     service.pricePerTime = pricePerTime || service.pricePerTime;
 
     if (req.file) {
-      service.image = req.file.path.replace(/\\/g, '/');
+      service.image = req.file.path.replace('\\', '/'); // Update image path
     }
 
     await service.save();
-    res.status(200).json(service);
+    res.status(200).json(service); // ✅ Fixed: return `service` instead of `product`
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
 });
+
 
 // Delete a service by id
 router.delete('/services/:id', async (req, res) => {
