@@ -1,7 +1,7 @@
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
-const Service = require('../models/service');
+const Service = require('../models/service');  // Ensure this path is correct
 const router = express.Router();
 
 // Set up multer storage configuration
