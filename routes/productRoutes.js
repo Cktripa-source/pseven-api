@@ -31,7 +31,7 @@ router.use("/uploads", express.static(uploadDir));
 // Create a new product with image upload
 router.post("/products", upload.single("image"), async (req, res) => {
   try {
-    const { name, description, price, category, stock, colors, quantityByColor } = req.body;
+    const { name, description, price, category, stock, colors } = req.body;
     const image = req.file ? `/uploads/${req.file.filename}` : null; // Format correct URL path
 
     const newProduct = new Product({
@@ -41,8 +41,7 @@ router.post("/products", upload.single("image"), async (req, res) => {
       image, // Save relative image path
       category,
       stock: parseInt(stock, 10) || 0, // Ensure stock is a number
-      colors: colors ? colors.split(",") : [], // Convert colors to array
-      quantityByColor: quantityByColor ? JSON.parse(quantityByColor) : {}, // Parse quantityByColor JSON
+      colors: colors ? colors.split(",").map(color => color.trim()) : [], // Convert colors to array and trim
     });
 
     await newProduct.save();
@@ -83,7 +82,7 @@ router.get("/products/:id", async (req, res) => {
 // Update a product by ID with image upload
 router.put("/products/:id", upload.single("image"), async (req, res) => {
   try {
-    const { name, description, price, category, stock, colors, quantityByColor } = req.body;
+    const { name, description, price, category, stock, colors } = req.body;
     const product = await Product.findById(req.params.id);
 
     if (!product) {
@@ -96,8 +95,7 @@ router.put("/products/:id", upload.single("image"), async (req, res) => {
     product.price = price ? parseFloat(price) : product.price;
     product.category = category || product.category;
     product.stock = stock ? parseInt(stock, 10) : product.stock;
-    product.colors = colors ? colors.split(",") : product.colors;
-    product.quantityByColor = quantityByColor ? JSON.parse(quantityByColor) : product.quantityByColor;
+    product.colors = colors ? colors.split(",").map(color => color.trim()) : product.colors;
 
     // Update the image only if a new one is uploaded
     if (req.file) {

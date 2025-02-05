@@ -10,30 +10,24 @@ const productSchema = new mongoose.Schema({
     required: true,
   },
   price: {
-    type: Number,  // Numeric price for calculations
+    type: Number, 
     required: true,
   },
   image: {
-    type: String,  // Path to image file
+    type: String,
   },
   category: {
     type: String,
     required: true,
   },
   stock: {
-    type: Number,  // Total stock available for this product
+    type: Number,
     required: true,
   },
   colors: {
-    type: [String],  // Array of available colors (e.g., ["black", "gold", "blue"])
-    required: true,
-  },
-  quantityByColor: {
-    type: Map,  // Stores quantity for each color
-    of: Number,  // Each color has a corresponding quantity
-    required: true,
-    default: {}
+    type: [String],
+    default: []  // Default to an empty array if not provided
   }
-}, { timestamps: true });  // Automatically add createdAt and updatedAt fields
+}, { timestamps: true });
 
 module.exports = mongoose.model('Product', productSchema);
