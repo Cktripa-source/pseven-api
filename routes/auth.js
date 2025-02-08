@@ -7,31 +7,42 @@ const router = express.Router();
 // POST route for user registration
 router.post('/register', async (req, res) => {
   const { fullName, email, password, agreeToTerms } = req.body;
+
+  // Validation for required fields
   if (!fullName || !email || !password || typeof agreeToTerms !== 'boolean') {
     return res.status(400).json({ message: 'All fields are required and must be valid.' });
   }
+
   try {
+    // Check if the user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: 'User already exists' });
     }
+
+    // Hash the password before saving
     const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create the new user with the default role set to 'user'
     const newUser = new User({
       fullName,
       email,
       password: hashedPassword,
       agreeToTerms,
+      role: 'user',  // Set default role to 'user'
     });
+
+    // Save the new user to the database
     await newUser.save();
+
+    // Respond to the client that registration was successful
     res.status(201).json({ message: 'User registered successfully' });
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
   }
 });
-
-// Other routes (burn, unburn, get users, etc.)
-
 
 // PUT route to burn (deactivate) a user
 router.put('/burn/:id', async (req, res) => {
@@ -73,6 +84,7 @@ router.put('/unburn/:id', async (req, res) => {
   }
 });
 
+// GET route to fetch all users
 router.get('/', async (req, res) => {
   console.log('Fetching users...');
   try {
@@ -87,6 +99,5 @@ router.get('/', async (req, res) => {
     res.status(500).json({ message: 'Failed to fetch users' });
   }
 });
-
 
 module.exports = router;
