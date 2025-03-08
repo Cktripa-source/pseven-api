@@ -4,7 +4,7 @@ const router = express.Router();
 const { authenticate, hasPermission } = require('../middleware/auth');
 
 // GET: API root - Show available endpoints
-router.get('/api', (req, res) => {
+router.get('/', (req, res) => {
   const apiEndpoints = {
     message: "Welcome to P-Seven API",
     version: "1.0.0",
