@@ -21,6 +21,11 @@ const app = express();
 app.use(cors()); // Enable CORS for all routes
 app.use(express.json()); // Parse incoming JSON requests
 
+// Root route - redirect to API docs
+app.get('/', (req, res) => {
+  res.redirect('/api');
+});
+
 // MongoDB connection
 const mongoURI = process.env.MONGODB_CONNECT_URI;
 
