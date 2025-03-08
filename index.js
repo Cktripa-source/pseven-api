@@ -34,7 +34,11 @@ mongoose.connect(mongoURI, {
     process.exit(1); // Exit process if DB connection fails
   });
 
+// Import default routes
+const defaultRoutes = require('./routes/defaultRoutes');
+
 // Use routes
+app.use('/api', defaultRoutes); // Default route for API documentation
 app.use('/api', productRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/auth/login', loginRoutes);
