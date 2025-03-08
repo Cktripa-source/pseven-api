@@ -27,6 +27,8 @@ const applicationRoutes = require('./routes/applicationRoutes');
 const serviceRoutes = require('./routes/serviceRoutes');
 const requestHelpServiceRoutes = require('./routes/requestHelpServiceRoutes'); // Import request help service routes
 const dashboardRoutes = require('./routes/dashboardRoutes'); // Import the dashboard routes
+const orderRoutes = require('./routes/orderRoutes'); // Import order routes
+const contactRoutes = require('./routes/contactRoutes'); // Import contact routes
 
 // Initialize Express app
 const app = express();
@@ -76,6 +78,8 @@ app.use('/api/jobs', jobRoutes);
 app.use('/api/applications', applicationRoutes);
 app.use('/api/help-requests', requestHelpServiceRoutes); // Use request help service routes
 app.use('/api/dashboard', dashboardRoutes); // Use the new dashboard routes
+app.use('/api/orders', orderRoutes); // Use order routes
+app.use('/api/contact', contactRoutes); // Use contact routes
 app.use('/api', productRoutes);
 app.use('/api', serviceRoutes);
 app.use('/api', defaultRoutes); // Default route for API documentation should be last among /api routes

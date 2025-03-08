@@ -44,6 +44,18 @@ router.get('/', (req, res) => {
           { method: "POST", path: "/api/help-requests/requests", description: "Request help for a service" }
         ]
       },
+      orders: {
+        routes: [
+          { method: "POST", path: "/api/orders", description: "Place a new order" },
+          { method: "GET", path: "/api/orders/my-orders", description: "Get user's orders" },
+          { method: "GET", path: "/api/orders/:id", description: "Get order details by ID" }
+        ]
+      },
+      contact: {
+        routes: [
+          { method: "POST", path: "/api/contact", description: "Submit a contact form" }
+        ]
+      },
       dashboard: {
         routes: [
           { method: "GET", path: "/api/dashboard/overview", description: "Get dashboard statistics" }
@@ -99,6 +111,20 @@ router.get('/admin', authenticate, hasPermission('canManageUsers'), (req, res) =
         routes: [
           { method: "GET", path: "/api/help-requests/requests", description: "Get all help requests" },
           { method: "PUT", path: "/api/help-requests/requests/:id", description: "Update request status" }
+        ]
+      },
+      orders: {
+        routes: [
+          { method: "GET", path: "/api/orders", description: "Get all orders" },
+          { method: "PUT", path: "/api/orders/:id", description: "Update order status" }
+        ]
+      },
+      contact: {
+        routes: [
+          { method: "GET", path: "/api/contact", description: "Get all contact messages" },
+          { method: "GET", path: "/api/contact/:id", description: "Get contact message by ID" },
+          { method: "PUT", path: "/api/contact/:id", description: "Update contact message status" },
+          { method: "DELETE", path: "/api/contact/:id", description: "Delete contact message" }
         ]
       }
     }
