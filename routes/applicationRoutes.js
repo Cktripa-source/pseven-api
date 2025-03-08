@@ -1,7 +1,39 @@
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 const Application = require('../models/application'); // Import the Application model
 const Job = require('../models/Jobs'); // Import the Job model
+
+// Configure multer storage for CV uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadDir = path.join(__dirname, '../uploads/cvs');
+    // Create directory if it doesn't exist
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname));
+  }
+});
+
+// Configure upload limits and file filter
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max file size
+  fileFilter: (req, file, cb) => {
+    // Accept only PDF files
+    if (file.mimetype === 'application/pdf') {
+      cb(null, true);
+    } else {
+      cb(new Error('Only PDF files are allowed!'), false);
+    }
+  }
+});
 
 // GET: Fetch all applications
 router.get('/', async (req, res) => {
@@ -26,10 +58,10 @@ router.get('/job/:jobId', async (req, res) => {
   }
 });
 
-// POST: Apply for a specific job
-router.post('/:jobId/apply', async (req, res) => {
+// POST: Apply for a specific job with CV upload
+router.post('/:jobId/apply', upload.single('cv'), async (req, res) => {
   const { jobId } = req.params;
-  const { fullName, email, cvLink, coverLetter } = req.body;
+  const { fullName, email, phoneNumber, coverLetter } = req.body;
 
   try {
     const job = await Job.findById(jobId); // Validate job existence
@@ -37,11 +69,20 @@ router.post('/:jobId/apply', async (req, res) => {
       return res.status(404).json({ message: 'Job not found' });
     }
 
+    let cvPath = null;
+    if (req.file) {
+      // If file was uploaded successfully, save the path
+      cvPath = `/uploads/cvs/${req.file.filename}`;
+    } else {
+      return res.status(400).json({ message: 'CV file is required (PDF only)' });
+    }
+
     const newApplication = new Application({
       job: jobId,
       fullName,
       email,
-      cvLink,
+      phoneNumber,
+      cvPath,
       coverLetter,
     });
 

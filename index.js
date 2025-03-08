@@ -49,8 +49,15 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'Server is healthy' });
 });
 
-// Serve static images from the 'uploads' folder
+// Serve static files from the 'uploads' folder
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Serve CV files with proper content type
+app.get('/uploads/cvs/:filename', (req, res) => {
+  const filePath = path.join(__dirname, 'uploads/cvs', req.params.filename);
+  res.contentType('application/pdf');
+  res.sendFile(filePath);
+});
 
 // Fallback for undefined routes
 app.use((req, res) => {

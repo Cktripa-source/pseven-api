@@ -17,9 +17,14 @@ const applicationSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-    cvLink: {
+    phoneNumber: {
       type: String,
-      required: true, // Link to the applicant's CV
+      required: true,
+      trim: true,
+    },
+    cvPath: {
+      type: String,
+      required: true, // Path to the stored CV file
     },
     coverLetter: {
       type: String,
