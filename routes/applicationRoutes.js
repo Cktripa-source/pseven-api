@@ -35,8 +35,10 @@ const upload = multer({
   }
 });
 
+const { authenticate, hasPermission } = require('../middleware/auth');
+
 // GET: Fetch all applications
-router.get('/', async (req, res) => {
+router.get('/', authenticate, hasPermission('canViewApplications'), async (req, res) => {
   try {
     const applications = await Application.find().populate('job', 'title description'); // Populate job details
     res.status(200).json(applications);
@@ -47,7 +49,7 @@ router.get('/', async (req, res) => {
 });
 
 // GET: Fetch applications for a specific job
-router.get('/job/:jobId', async (req, res) => {
+router.get('/job/:jobId', authenticate, hasPermission('canViewApplications'), async (req, res) => {
   const { jobId } = req.params;
   try {
     const applications = await Application.find({ job: jobId }).populate('job', 'title description');
@@ -94,7 +96,7 @@ router.post('/:jobId/apply', upload.single('cv'), async (req, res) => {
 });
 
 // PUT: Update an application by ID
-router.put('/:id', async (req, res) => {
+router.put('/:id', authenticate, hasPermission('canEditApplications'), async (req, res) => {
   const { id } = req.params;
   const { fullName, email, cvLink, coverLetter, status } = req.body;
 
@@ -117,7 +119,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // DELETE: Delete an application by ID
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authenticate, hasPermission('canEditApplications'), async (req, res) => {
   const { id } = req.params;
   try {
     const application = await Application.findByIdAndDelete(id);

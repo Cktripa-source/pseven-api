@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const Job = require('../models/Jobs'); // Import the Job model
+const { authenticate, hasPermission } = require('../middleware/auth');
 
 // POST: Create a new job
-router.post('/', async (req, res) => {
+router.post('/', authenticate, hasPermission('canManageJobs'), async (req, res) => {
     try {
       const jobData = req.body;
       console.log('Job data received:', jobData); // Log the incoming data
@@ -43,7 +44,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // PUT: Update a specific job
-router.put('/:id', async (req, res) => {
+router.put('/:id', authenticate, hasPermission('canManageJobs'), async (req, res) => {
   const { title, description, location, requirements } = req.body;
 
   try {
@@ -63,7 +64,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // DELETE: Delete a specific job
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authenticate, hasPermission('canManageJobs'), async (req, res) => {
   try {
     const deletedJob = await Job.findByIdAndDelete(req.params.id);
     if (!deletedJob) {
