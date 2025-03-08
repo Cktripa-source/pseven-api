@@ -16,4 +16,4 @@ author = 40303879
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "npx nodemon index.js"
+args = "npm run dev"
