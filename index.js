@@ -37,21 +37,21 @@ mongoose.connect(mongoURI, {
 // Import default routes
 const defaultRoutes = require('./routes/defaultRoutes');
 
-// Use routes
-app.use('/api', defaultRoutes); // Default route for API documentation
-app.use('/api', productRoutes);
-app.use('/api/auth', authRoutes);
-app.use('/api/auth/login', loginRoutes);
-app.use('/api/jobs', jobRoutes);
-app.use('/api/applications', applicationRoutes);
-app.use('/api', serviceRoutes);
-app.use('/api/help-requests', requestHelpServiceRoutes); // Use request help service routes
-app.use('/api/dashboard', dashboardRoutes); // Use the new dashboard routes
-
 // Health check route
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'Server is healthy' });
 });
+
+// Use routes - order matters for routing
+app.use('/api/auth/login', loginRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/jobs', jobRoutes);
+app.use('/api/applications', applicationRoutes);
+app.use('/api/help-requests', requestHelpServiceRoutes); // Use request help service routes
+app.use('/api/dashboard', dashboardRoutes); // Use the new dashboard routes
+app.use('/api', productRoutes);
+app.use('/api', serviceRoutes);
+app.use('/api', defaultRoutes); // Default route for API documentation should be last among /api routes
 
 // Serve static files from the 'uploads' folder
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
