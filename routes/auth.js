@@ -5,8 +5,10 @@ const User = require('../models/user');
 const { authenticate, isAdmin, hasPermission } = require('../middleware/auth');
 const router = express.Router();
 
+const { registerValidation } = require('../middleware/validation');
+
 // POST route for user registration
-router.post('/register', async (req, res) => {
+router.post('/register', registerValidation, async (req, res) => {
   const { fullName, email, password, agreeToTerms } = req.body;
 
   // Validation for required fields
@@ -95,6 +97,129 @@ router.post('/create-user', authenticate, isAdmin, async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
+
+// POST route for refreshing tokens
+router.post('/refresh-token', async (req, res) => {
+  const { refreshToken } = req.body;
+  
+  if (!refreshToken) {
+    return res.status(401).json({ message: 'Refresh token is required' });
+  }
+  
+  try {
+    const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET || 'pseven-refresh!123');
+    
+    // Find user 
+    const user = await User.findById(decoded.id);
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    if (user.burned) {
+      return res.status(403).json({ message: 'Account has been deactivated' });
+    }
+    
+    // Generate new tokens
+    const newAccessToken = jwt.sign(
+      { 
+        id: user._id, 
+        email: user.email,
+        role: user.role
+      },
+      process.env.JWT_SECRET || 'pseven!123',
+      { 
+        expiresIn: '1h',
+        issuer: 'p-seven-api',
+        audience: 'p-seven-client' 
+      }
+    );
+    
+    res.status(200).json({ 
+      token: newAccessToken,
+
+// POST route for requesting password reset
+router.post('/forgot-password', async (req, res) => {
+  const { email } = req.body;
+  
+  if (!email) {
+    return res.status(400).json({ message: 'Email is required' });
+  }
+  
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      // For security, don't reveal if the user exists
+      return res.status(200).json({ message: 'If an account with that email exists, a reset link will be sent' });
+    }
+    
+    // Create a password reset token
+    const resetToken = jwt.sign(
+      { id: user._id },
+      process.env.RESET_TOKEN_SECRET || 'pseven-reset!123',
+      { expiresIn: '15m' }
+    );
+    
+    // In a real application, you would send an email with the token
+    // For now, just return the token in the response
+    res.status(200).json({
+      message: 'If an account with that email exists, a reset link will be sent',
+      // In production, remove this line and actually send an email
+      resetToken
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// POST route for resetting password
+router.post('/reset-password', async (req, res) => {
+  const { resetToken, newPassword } = req.body;
+  
+  if (!resetToken || !newPassword) {
+    return res.status(400).json({ message: 'Reset token and new password are required' });
+  }
+  
+  try {
+    const decoded = jwt.verify(resetToken, process.env.RESET_TOKEN_SECRET || 'pseven-reset!123');
+    const user = await User.findById(decoded.id);
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    // Hash the new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    
+    // Update the user's password
+    user.password = hashedPassword;
+    await user.save();
+    
+    res.status(200).json({ message: 'Password has been reset successfully' });
+  } catch (err) {
+    console.error(err);
+    if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
+      return res.status(401).json({ message: 'Invalid or expired reset token' });
+    }
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+      user: {
+        id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        role: user.role,
+        permissions: user.permissions
+      }
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(401).json({ message: 'Invalid or expired refresh token' });
+  }
+});
+
 
 // PUT route to update user role and permissions
 router.put('/update-role/:id', authenticate, isAdmin, async (req, res) => {

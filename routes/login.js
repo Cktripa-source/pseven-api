@@ -5,8 +5,10 @@ const jwt = require('jsonwebtoken');
 
 const router = express.Router();
 
+const { loginValidation } = require('../middleware/validation');
+
 // POST: /api/auth/login
-router.post('/', async (req, res) => {
+router.post('/', loginValidation, async (req, res) => {
   const { email, password } = req.body;
 
   try {
@@ -27,7 +29,7 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
-    // Generate a JWT token with role and permissions info
+    // Generate an access token
     const token = jwt.sign(
       { 
         id: user._id, 
@@ -35,12 +37,24 @@ router.post('/', async (req, res) => {
         role: user.role
       },
       process.env.JWT_SECRET || 'pseven!123',
-      { expiresIn: '1h' }
+      { 
+        expiresIn: '1h',
+        issuer: 'p-seven-api',
+        audience: 'p-seven-client' 
+      }
+    );
+    
+    // Generate a refresh token
+    const refreshToken = jwt.sign(
+      { id: user._id },
+      process.env.REFRESH_TOKEN_SECRET || 'pseven-refresh!123',
+      { expiresIn: '7d' }
     );
 
-    // Send response with the token and user info
+    // Send response with tokens and user info
     res.status(200).json({ 
       token,
+      refreshToken,
       user: {
         id: user._id,
         fullName: user.fullName,

@@ -2,7 +2,21 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
-require('dotenv').config(); // Ensure dotenv is being loaded
+const helmet = require('helmet');
+const { logger, morganMiddleware } = require('./utils/logger');
+// Load and validate environment variables
+try {
+  require('dotenv-safe').config({
+    allowEmptyValues: true,
+    example: './.env.example'
+  });
+} catch (err) {
+  console.error('Missing required environment variables:', err.message);
+  // Continue running in development, exit in production
+  if (process.env.NODE_ENV === 'production') {
+    process.exit(1);
+  }
+}
 
 // Import routes
 const productRoutes = require('./routes/productRoutes');
@@ -18,26 +32,34 @@ const dashboardRoutes = require('./routes/dashboardRoutes'); // Import the dashb
 const app = express();
 
 // Middleware
-app.use(cors()); // Enable CORS for all routes
-app.use(express.json()); // Parse incoming JSON requests
+app.use(helmet()); // Set security HTTP headers
+// Configure CORS
+const corsOptions = {
+  origin: process.env.CORS_ORIGIN || '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  credentials: true,
+  maxAge: 3600
+};
+app.use(cors(corsOptions)); // Enable CORS with configured options
+app.use(morganMiddleware); // Request logging
+app.use(express.json({ limit: '10kb' })); // Parse incoming JSON requests with size limit
+
+// Import rate limiter
+const { authLimiter, apiLimiter } = require('./middleware/rateLimiter');
+
+// Apply API rate limiter to all routes except auth
+app.use('/api', apiLimiter);
 
 // Root route - redirect to API docs
 app.get('/', (req, res) => {
   res.redirect('/api');
 });
 
-// MongoDB connection
-const mongoURI = process.env.MONGODB_CONNECT_URI;
-
-mongoose.connect(mongoURI, {
-  serverSelectionTimeoutMS: 5000, // Timeout for selecting the server
-  socketTimeoutMS: 45000, // Timeout for socket operations
-})
-  .then(() => console.log('Connected to MongoDB successfully!'))
-  .catch((err) => {
-    console.error('MongoDB connection error:', err.message);
-    process.exit(1); // Exit process if DB connection fails
-  });
+// Database connection
+const connectDB = require('./utils/database');
+connectDB(); // Connect to MongoDB
 
 // Import default routes
 const defaultRoutes = require('./routes/defaultRoutes');
@@ -48,7 +70,7 @@ app.get('/health', (req, res) => {
 });
 
 // Use routes - order matters for routing
-app.use('/api/auth/login', loginRoutes);
+app.use('/api/auth/login', authLimiter, loginRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/jobs', jobRoutes);
 app.use('/api/applications', applicationRoutes);
