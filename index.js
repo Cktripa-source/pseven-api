@@ -65,7 +65,12 @@ app.get('/uploads/cvs/:filename', (req, res) => {
 
 // Fallback for undefined routes
 app.use((req, res) => {
-  res.status(404).json({ error: 'Route not found' });
+  res.status(404).json({ 
+    error: 'Route not found', 
+    path: req.originalUrl,
+    method: req.method,
+    suggestion: 'Try accessing /api for a list of available endpoints'
+  });
 });
 
 // Global error handler
