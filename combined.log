@@ -5399,3 +5399,6 @@
 {"level":"info","message":"Server is running on port 5000","timestamp":"2025-03-24T16:39:05.648Z"}
 {"level":"info","message":"Environment: development","timestamp":"2025-03-24T16:39:05.648Z"}
 {"level":"info","message":"MongoDB connected successfully","timestamp":"2025-03-24T16:39:15.351Z"}
+{"level":"info","message":"Connecting to MongoDB...","timestamp":"2025-03-24T16:52:00.248Z"}
+{"level":"info","message":"Server is running on port 5000","timestamp":"2025-03-24T16:52:00.291Z"}
+{"level":"info","message":"Environment: development","timestamp":"2025-03-24T16:52:00.292Z"}
