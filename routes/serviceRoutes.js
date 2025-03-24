@@ -22,15 +22,13 @@ router.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Create a new service with image upload
 router.post('/services', upload.single('image'), async (req, res) => {
-  const { name, description, price, pricePerTime } = req.body;
+  const { name, description} = req.body;
   const image = req.file ? req.file.path.replace('\\', '/') : null; // Format image path for URL
 
   try {
     const newService = new Service({
       name,
       description,
-      price,
-      pricePerTime,
       image, // Save the image path to the database
     });
 
@@ -42,12 +40,12 @@ router.post('/services', upload.single('image'), async (req, res) => {
 });
 
 // Get all services
-router.get('/services', async (req, res) => {
+router.get('/', async (req, res) => {
   try {
-    const services = await Service.find();
-    res.status(200).json(services);
+      const services = await Service.find(); // Adjust according to your data retrieval logic
+      res.json(services);
   } catch (error) {
-    res.status(400).json({ message: error.message });
+      res.status(500).json({ message: error.message });
   }
 });
 
@@ -66,7 +64,7 @@ router.get('/services/:id', async (req, res) => {
 
 // Update a service by id with image upload
 router.put('/services/:id', upload.single('image'), async (req, res) => {
-  const { name, description, price, pricePerTime } = req.body;
+  const { name, description } = req.body;
 
   try {
     const service = await Service.findById(req.params.id);
@@ -76,8 +74,6 @@ router.put('/services/:id', upload.single('image'), async (req, res) => {
 
     service.name = name || service.name;
     service.description = description || service.description;
-    service.price = price || service.price;
-    service.pricePerTime = pricePerTime || service.pricePerTime;
 
     if (req.file) {
       service.image = req.file.path.replace('\\', '/'); // Update image path

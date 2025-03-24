@@ -15,30 +15,30 @@ const jobSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    salary: {
-      type: Number,
-      required: true,
-    },
     employmentType: {
       type: String,
       enum: ['Full-time', 'Part-time', 'Contract', 'Internship', 'Temporary'],
       required: true,
     },
     skillsRequired: {
-      type: [String], // List of required skills
+      type: [String],
       default: [],
     },
     postedBy: {
       type: String,
-      required: true, // For example, "Admin" or a user ID
+      required: true,
     },
     status: {
       type: String,
       enum: ['Open', 'Closed'],
       default: 'Open',
     },
+    image: {
+      type: String, // Store image file paths or URLs
+      default: null,
+    },
   },
-  { timestamps: true } // Adds createdAt and updatedAt fields
+  { timestamps: true }
 );
 
 module.exports = mongoose.model('Job', jobSchema);

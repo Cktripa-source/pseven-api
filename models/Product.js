@@ -4,29 +4,38 @@ const productSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
+    trim: true
   },
   description: {
     type: String,
-    required: true,
+    required: true
   },
   price: {
-    type: Number, 
+    type: Number,
     required: true,
+    min: 0
   },
   image: {
     type: String,
+    default: null
+  },
+  // Add this field to store the Cloudinary public_id
+  imagePublicId: {
+    type: String,
+    default: null
   },
   category: {
     type: String,
     required: true,
+    trim: true
   },
   stock: {
     type: Number,
-    required: true,
+    default: 0
   },
   colors: {
     type: [String],
-    default: []  // Default to an empty array if not provided
+    default: []
   }
 }, { timestamps: true });
 
