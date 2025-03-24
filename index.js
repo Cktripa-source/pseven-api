@@ -21,22 +21,28 @@ const serviceRoutes = require('./routes/serviceRoutes');
 const defaultRoutes = require('./routes/defaultRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 
+// Initialize Express app
+const app = express();
+
 // Environment check
 const isProduction = process.env.NODE_ENV === 'production';
 
 // CORS configuration
 const corsOptions = {
   origin: function (origin, callback) {
-    const allowedOrigins = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ['http://localhost:3000'];
-    if (!origin || allowedOrigins.indexOf(origin) !== -1 || !isProduction) {
+    const allowedOrigins = [
+      'https://www.psevenrwanda.com',
+      'https://psevenrwanda.com',
+      'https://pseven-web.vercel.app'
+    ];
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
-      logger.warn(`CORS blocked request from origin: ${origin}`);
       callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   exposedHeaders: ['Content-Range', 'X-Content-Range', 'Content-Disposition'],
   maxAge: 3600
@@ -44,15 +50,10 @@ const corsOptions = {
 
 app.use(cors(corsOptions)); // Apply CORS middleware
 
-
-// Initialize Express app
-const app = express();
-app.use(cors(corsOptions));
-
 // Middleware for CSP - Modified to include your production domain
 app.use((req, res, next) => {
   const frameAncestors = isProduction 
-    ? `'self' ${process.env.FRONTEND_URL || '*'}`
+    ? `'self' ${process.env.FRONTEND_URL || '*'}` 
     : "'self' http://localhost:3000";
   res.setHeader("Content-Security-Policy", `frame-ancestors ${frameAncestors}`);
   next();
@@ -95,11 +96,9 @@ const connectDB = async () => {
     if (!mongoURI) {
       throw new Error('MONGODB_URI is not defined in environment variables');
     }
-    
+
     logger.info('Connecting to MongoDB...');
-    await mongoose.connect(mongoURI, {
-      // Connection options are applied automatically in newer mongoose versions
-    });
+    await mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true });
     logger.info('MongoDB connected successfully');
   } catch (err) {
     logger.error(`MongoDB connection error: ${err.message}`);
@@ -133,7 +132,7 @@ app.get('/health', (req, res) => {
     2: 'connecting',
     3: 'disconnecting'
   };
-  
+
   res.status(200).json({
     status: 'ok',
     timestamp: new Date().toISOString(),
@@ -173,10 +172,10 @@ app.use((req, res) => {
 app.use((err, req, res, next) => {
   const statusCode = err.status || 500;
   const errorId = Date.now().toString(36) + Math.random().toString(36).substr(2);
-  
+
   logger.error(`[ErrorID: ${errorId}] ${err.message}`);
   logger.error(err.stack);
-  
+
   res.status(statusCode).json({
     error: statusCode === 500 ? 'Internal Server Error' : err.message,
     errorId: errorId,
