@@ -5391,3 +5391,7 @@
 {"level":"info","message":"MongoDB Connected: pseven-api-shard-00-02.7sh83.mongodb.net","timestamp":"2025-03-24T14:19:04.940Z"}
 {"level":"info","message":"MongoDB Connected: pseven-api-shard-00-02.7sh83.mongodb.net","timestamp":"2025-03-24T14:19:04.941Z"}
 {"level":"warn","message":"MongoDB disconnected","timestamp":"2025-03-24T14:19:21.114Z"}
+{"level":"info","message":"Connecting to MongoDB...","timestamp":"2025-03-24T16:10:04.965Z"}
+{"level":"info","message":"Server is running on port 5000","timestamp":"2025-03-24T16:10:05.012Z"}
+{"level":"info","message":"Environment: development","timestamp":"2025-03-24T16:10:05.013Z"}
+{"level":"info","message":"MongoDB connected successfully","timestamp":"2025-03-24T16:10:12.321Z"}
