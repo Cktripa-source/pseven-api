@@ -5402,3 +5402,8 @@
 {"level":"info","message":"Connecting to MongoDB...","timestamp":"2025-03-24T16:52:00.248Z"}
 {"level":"info","message":"Server is running on port 5000","timestamp":"2025-03-24T16:52:00.291Z"}
 {"level":"info","message":"Environment: development","timestamp":"2025-03-24T16:52:00.292Z"}
+{"level":"info","message":"MongoDB connected successfully","timestamp":"2025-03-24T16:52:05.718Z"}
+{"level":"info","message":"127.0.0.1 - - [24/Mar/2025:17:00:18 +0000] \"POST /api/auth/login HTTP/1.1\" 404 28 \"-\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36\"","timestamp":"2025-03-24T17:00:18.786Z"}
+{"level":"info","message":"127.0.0.1 - - [24/Mar/2025:17:00:46 +0000] \"POST /api/auth/login HTTP/1.1\" 200 771 \"-\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36\"","timestamp":"2025-03-24T17:00:46.326Z"}
+{"level":"info","message":"127.0.0.1 - - [24/Mar/2025:17:00:59 +0000] \"GET /api/auth/check HTTP/1.1\" 200 61 \"-\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36\"","timestamp":"2025-03-24T17:00:59.648Z"}
+{"level":"info","message":"127.0.0.1 - - [24/Mar/2025:17:05:13 +0000] \"POST /api/auth/login HTTP/1.1\" 200 771 \"-\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36\"","timestamp":"2025-03-24T17:05:13.952Z"}

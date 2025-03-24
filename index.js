@@ -42,6 +42,9 @@ const corsOptions = {
   maxAge: 3600
 };
 
+app.use(cors(corsOptions)); // Apply CORS middleware
+
+
 // Initialize Express app
 const app = express();
 app.use(cors(corsOptions));
