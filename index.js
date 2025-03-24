@@ -21,18 +21,22 @@ const serviceRoutes = require('./routes/serviceRoutes');
 const defaultRoutes = require('./routes/defaultRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 
+// Environment check
+const isProduction = process.env.NODE_ENV === 'production';
+
 // CORS configuration
 const corsOptions = {
   origin: function (origin, callback) {
     const allowedOrigins = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ['http://localhost:3000'];
-    if (!origin || allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production') {
+    if (!origin || allowedOrigins.indexOf(origin) !== -1 || !isProduction) {
       callback(null, true);
     } else {
+      logger.warn(`CORS blocked request from origin: ${origin}`);
       callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],  // Added PATCH here
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   exposedHeaders: ['Content-Range', 'X-Content-Range', 'Content-Disposition'],
   maxAge: 3600
@@ -42,9 +46,12 @@ const corsOptions = {
 const app = express();
 app.use(cors(corsOptions));
 
-// Middleware for CSP
+// Middleware for CSP - Modified to include your production domain
 app.use((req, res, next) => {
-  res.setHeader("Content-Security-Policy", "frame-ancestors 'self' http://localhost:3000");
+  const frameAncestors = isProduction 
+    ? `'self' ${process.env.FRONTEND_URL || '*'}`
+    : "'self' http://localhost:3000";
+  res.setHeader("Content-Security-Policy", `frame-ancestors ${frameAncestors}`);
   next();
 });
 
@@ -57,28 +64,48 @@ app.use(helmet({
 app.use(express.json({ limit: '10kb' }));
 app.use(morganMiddleware);
 
-// Check if uploads directory exists, create if not
-const uploadsDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
+// Handle file directories conditionally based on environment
+if (!isProduction) {
+  // Only create local directories in development
+  const uploadsDir = path.join(__dirname, 'uploads');
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  }
 
-// Check if uploads/cvs directory exists, create if not
-const cvsDir = path.join(__dirname, 'uploads', 'cvs');
-if (!fs.existsSync(cvsDir)) {
-  fs.mkdirSync(cvsDir, { recursive: true });
+  const cvsDir = path.join(__dirname, 'uploads', 'cvs');
+  if (!fs.existsSync(cvsDir)) {
+    fs.mkdirSync(cvsDir, { recursive: true });
+  }
+  
+  // Serve static files from 'uploads' in development
+  app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 }
 
 // Rate limiters
 const { authLimiter, apiLimiter } = require('./middleware/rateLimiter');
 app.use('/api', apiLimiter);
 
-// Connect to MongoDB
-const connectDB = require('./utils/database');
-connectDB();
+// Connect to MongoDB with improved error handling
+const connectDB = async () => {
+  try {
+    const mongoURI = process.env.MONGODB_CONNECT_URI;
+    if (!mongoURI) {
+      throw new Error('MONGODB_URI is not defined in environment variables');
+    }
+    
+    logger.info('Connecting to MongoDB...');
+    await mongoose.connect(mongoURI, {
+      // Connection options are applied automatically in newer mongoose versions
+    });
+    logger.info('MongoDB connected successfully');
+  } catch (err) {
+    logger.error(`MongoDB connection error: ${err.message}`);
+    process.exit(1); // Exit with failure
+  }
+};
 
-// Serve static files from 'uploads'
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// Immediately invoke connectDB
+connectDB();
 
 // Define routes
 app.use('/api/auth/login', authLimiter, loginRoutes);
@@ -94,22 +121,40 @@ app.use('/api/services', serviceRoutes);
 app.use('/api', defaultRoutes);
 app.use('/api/uploads', uploadRoutes);
 
-// Health check route
+// Health check route - improved for deployment monitoring
 app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'Server is healthy' });
-});
-
-// Serve CV files explicitly
-app.get('/uploads/cvs/:filename', (req, res) => {
-  const filePath = path.join(uploadsDir, 'cvs', req.params.filename);
-  res.contentType('application/pdf');
-  res.sendFile(filePath, (err) => {
-    if (err) {
-      logger.error(`Error serving CV file: ${err.message}`);
-      res.status(err.status || 404).end();
-    }
+  const dbState = mongoose.connection.readyState;
+  const dbStatus = {
+    0: 'disconnected',
+    1: 'connected',
+    2: 'connecting',
+    3: 'disconnecting'
+  };
+  
+  res.status(200).json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+    db: dbStatus[dbState] || 'unknown',
+    uptime: process.uptime()
   });
 });
+
+// Conditional file serving based on environment
+if (!isProduction) {
+  // Serve CV files explicitly only in development
+  app.get('/uploads/cvs/:filename', (req, res) => {
+    const filePath = path.join(__dirname, 'uploads', 'cvs', req.params.filename);
+    res.contentType('application/pdf');
+    res.sendFile(filePath, (err) => {
+      if (err) {
+        logger.error(`Error serving CV file: ${err.message}`);
+        res.status(err.status || 404).end();
+      }
+    });
+  });
+}
+
 // 404 handler for undefined routes
 app.use((req, res) => {
   logger.warn(`Route not found: ${req.method} ${req.originalUrl}`);
@@ -121,15 +166,19 @@ app.use((req, res) => {
   });
 });
 
-// Global error handler
+// Global error handler - improved with better error details
 app.use((err, req, res, next) => {
-  logger.error(`Internal server error: ${err.message}`);
+  const statusCode = err.status || 500;
+  const errorId = Date.now().toString(36) + Math.random().toString(36).substr(2);
+  
+  logger.error(`[ErrorID: ${errorId}] ${err.message}`);
   logger.error(err.stack);
   
-  res.status(err.status || 500).json({
-    error: 'Internal Server Error',
-    message: err.message,
-    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+  res.status(statusCode).json({
+    error: statusCode === 500 ? 'Internal Server Error' : err.message,
+    errorId: errorId,
+    status: statusCode,
+    stack: !isProduction ? err.stack : undefined
   });
 });
 
@@ -140,10 +189,22 @@ process.on('SIGINT', async () => {
   process.exit(0);
 });
 
+process.on('SIGTERM', async () => {
+  logger.info('SIGTERM received, shutting down gracefully');
+  await mongoose.disconnect();
+  process.exit(0);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  // Don't exit the process here, just log the error
+});
+
 // Start server
 const port = process.env.PORT || 5000;
-app.listen(port, () => {
-  logger.info(`Server is running on http://localhost:${port}`);
+app.listen(port, '0.0.0.0', () => { // Listen on all network interfaces
+  logger.info(`Server is running on port ${port}`);
+  logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
 });
 
 module.exports = app; // Export for testing purposes
