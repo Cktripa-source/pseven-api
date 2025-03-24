@@ -33,7 +33,8 @@ const corsOptions = {
     const allowedOrigins = [
       'https://www.psevenrwanda.com',
       'https://psevenrwanda.com',
-      'https://pseven-web.vercel.app'
+      'https://pseven-web.vercel.app',
+      'http://localhost:3000'  // Add this line
     ];
     if (!origin || allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);

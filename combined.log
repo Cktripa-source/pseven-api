@@ -5407,3 +5407,10 @@
 {"level":"info","message":"127.0.0.1 - - [24/Mar/2025:17:00:46 +0000] \"POST /api/auth/login HTTP/1.1\" 200 771 \"-\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36\"","timestamp":"2025-03-24T17:00:46.326Z"}
 {"level":"info","message":"127.0.0.1 - - [24/Mar/2025:17:00:59 +0000] \"GET /api/auth/check HTTP/1.1\" 200 61 \"-\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36\"","timestamp":"2025-03-24T17:00:59.648Z"}
 {"level":"info","message":"127.0.0.1 - - [24/Mar/2025:17:05:13 +0000] \"POST /api/auth/login HTTP/1.1\" 200 771 \"-\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36\"","timestamp":"2025-03-24T17:05:13.952Z"}
+{"level":"info","message":"Connecting to MongoDB...","timestamp":"2025-03-24T17:18:42.923Z"}
+{"level":"info","message":"Server is running on port 5000","timestamp":"2025-03-24T17:18:42.978Z"}
+{"level":"info","message":"Environment: production","timestamp":"2025-03-24T17:18:42.978Z"}
+{"level":"info","message":"MongoDB connected successfully","timestamp":"2025-03-24T17:18:49.186Z"}
+{"level":"info","message":"127.0.0.1 - - [24/Mar/2025:17:19:47 +0000] \"POST /api/auth/login HTTP/1.1\" 200 771 \"-\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36\"","timestamp":"2025-03-24T17:19:47.859Z"}
+{"level":"info","message":"127.0.0.1 - - [24/Mar/2025:17:20:33 +0000] \"GET /api/auth/check HTTP/1.1\" 304 - \"-\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36\"","timestamp":"2025-03-24T17:20:33.683Z"}
+{"level":"info","message":"127.0.0.1 - - [24/Mar/2025:17:20:45 +0000] \"POST /api/auth/login HTTP/1.1\" 404 28 \"-\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36\"","timestamp":"2025-03-24T17:20:45.757Z"}
