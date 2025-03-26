@@ -103,3 +103,4 @@
 {"exception":{"http_code":400,"message":"Invalid resource type 'auto'. Must be one of: image, javascript, css, video, raw.","name":"Error"},"level":"error","message":"Unhandled Rejection at:","timestamp":"2025-03-25T23:20:47.948Z"}
 {"exception":{"http_code":400,"message":"Invalid resource type 'auto'. Must be one of: image, javascript, css, video, raw.","name":"Error"},"level":"error","message":"Unhandled Rejection at:","timestamp":"2025-03-26T00:17:27.995Z"}
 {"exception":{"http_code":400,"message":"Invalid resource type 'auto'. Must be one of: image, javascript, css, video, raw.","name":"Error"},"level":"error","message":"Unhandled Rejection at:","timestamp":"2025-03-26T00:18:04.122Z"}
+{"exception":{"http_code":400,"message":"Invalid resource type 'auto'. Must be one of: image, javascript, css, video, raw.","name":"Error"},"level":"error","message":"Unhandled Rejection at:","timestamp":"2025-03-26T00:20:50.115Z"}

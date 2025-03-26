@@ -19,14 +19,13 @@ cloudinary.config({
  * @param {Array} allowedFormats - Array of allowed file formats
  * @returns {CloudinaryStorage} - Configured storage engine
  */
-const createCloudinaryStorage = (folder = 'uploads', allowedFormats = ['pdf', 'doc', 'docx']) => {
+const createCloudinaryStorage = (folder = 'uploads', allowedFormats = ['jpg', 'jpeg', 'png', 'gif']) => {
   return new CloudinaryStorage({
     cloudinary: cloudinary,
     params: {
       folder: folder,
-      resource_type: 'raw',
+      resource_type: 'image', // Set resource type to 'image'
       allowed_formats: allowedFormats,
-      format: 'auto',
       public_id: (req, file) => {
         // Generate a unique ID using timestamp and random string
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
@@ -35,118 +34,6 @@ const createCloudinaryStorage = (folder = 'uploads', allowedFormats = ['pdf', 'd
         return `${filename}-${uniqueSuffix}`;
       }
     }
-  });
-};
-
-/**
- * Upload a file to Cloudinary
- * @param {string} filePath - Path to the local file
- * @param {Object} options - Upload options
- * @returns {Promise} - Upload result
- */
-const uploadFile = (filePath, options = {}) => {
-  return new Promise((resolve, reject) => {
-    const defaultOptions = {
-      resource_type: 'auto',
-      folder: 'uploads'
-    };
-    
-    cloudinary.uploader.upload(
-      filePath, 
-      { ...defaultOptions, ...options }, 
-      (error, result) => {
-        if (error) {
-          return reject(error);
-        }
-        resolve(result);
-      }
-    );
-  });
-};
-
-/**
- * Generate a signed URL for a Cloudinary resource
- * @param {string} publicId - Public ID of the resource
- * @param {Object} options - URL generation options
- * @returns {string} - Signed URL
- */
-const generateSignedUrl = (publicId, options = {}) => {
-  // Default options for signed URLs
-  const defaultOptions = {
-    secure: true,
-    resource_type: 'auto',
-    type: 'upload',
-    sign_url: true,
-    version: Math.round(new Date().getTime() / 1000)
-  };
-  
-  return cloudinary.url(publicId, { ...defaultOptions, ...options });
-};
-
-/**
- * Generate a URL with transformations for images
- * @param {string} publicId - Public ID of the image
- * @param {Object} transformations - Image transformations
- * @returns {string} - Transformed image URL
- */
-const generateImageUrl = (publicId, transformations = {}) => {
-  // Default transformations for optimized images
-  const defaultTransformations = {
-    fetch_format: 'auto',
-    quality: 'auto',
-    dpr: 'auto'
-  };
-  
-  return cloudinary.url(publicId, { 
-    secure: true,
-    transformation: { ...defaultTransformations, ...transformations } 
-  });
-};
-
-/**
- * Verify if a resource exists in Cloudinary
- * @param {string} publicId - Public ID of the resource
- * @param {string} resourceType - Resource type (image, video, raw)
- * @returns {Promise} - Resource information or error
- */
-const verifyResource = (publicId, resourceType = 'raw') => {
-  return new Promise((resolve, reject) => {
-    cloudinary.api.resource(
-      publicId,
-      { resource_type: resourceType },
-      (error, result) => {
-        if (error) {
-          return reject(error);
-        }
-        resolve(result);
-      }
-    );
-  });
-};
-
-/**
- * Delete a resource from Cloudinary
- * @param {string} publicId - Public ID of the resource
- * @param {Object} options - Deletion options
- * @returns {Promise} - Deletion result
- */
-const deleteResource = (publicId, options = {}) => {
-  const defaultOptions = {
-    resource_type: 'auto',
-    invalidate: true
-  };
-  
-  return new Promise((resolve, reject) => {
-    cloudinary.uploader.destroy(
-      publicId,
-      { ...defaultOptions, ...options },
-      (error, result) => {
-        if (error) {
-          return reject(error);
-        }
-        resolve(result);
-      }
-    );
   });
 };
 
@@ -169,8 +56,7 @@ const createUploadMiddleware = (folder = 'uploads') => {
     req.cloudinaryResult = {
       public_id: req.file.filename,
       secure_url: req.file.path,
-      resource_type: req.file.mimetype.startsWith('image/') ? 'image' : 
-                    req.file.mimetype.startsWith('video/') ? 'video' : 'raw',
+      resource_type: 'image', // Ensure this is set to 'image'
       format: req.file.originalname.split('.').pop(),
       bytes: req.file.size
     };
@@ -182,65 +68,48 @@ const createUploadMiddleware = (folder = 'uploads') => {
 };
 
 /**
- * Fix publicId if it has been extracted incorrectly
- * This handles cases where folder structure might be missing
+ * Delete a resource from Cloudinary
  * @param {string} publicId - Public ID of the resource
- * @param {string} defaultFolder - Default folder to prepend if needed
- * @returns {string} - Corrected public ID
+ * @param {Object} options - Deletion options
+ * @returns {Promise} - Deletion result
  */
-const fixPublicId = (publicId, defaultFolder = null) => {
-  // If publicId already has a folder structure, return as is
-  if (publicId.includes('/')) {
-    return publicId;
-  }
+const deleteResource = (publicId, options = {}) => {
+  const defaultOptions = {
+    resource_type: 'image', // Set to 'image' for image resources
+    invalidate: true
+  };
   
-  // If a default folder is provided and the publicId doesn't have it, prepend it
-  if (defaultFolder && !publicId.startsWith(`${defaultFolder}/`)) {
-    return `${defaultFolder}/${publicId}`;
-  }
-  
-  return publicId;
+  return new Promise((resolve, reject) => {
+    cloudinary.uploader.destroy(
+      publicId,
+      { ...defaultOptions, ...options },
+      (error, result) => {
+        if (error) {
+          return reject(error);
+        }
+        resolve(result);
+      }
+    );
+  });
 };
+// utils/cloudinary.js
 
-/**
- * Get a direct access URL for a resource (unsigned, for public resources)
- * @param {string} publicId - Public ID of the resource
- * @param {string} resourceType - Resource type (image, video, raw)
- * @returns {string} - Direct URL
- */
-const getDirectUrl = (publicId, resourceType = 'raw') => {
-  return cloudinary.url(publicId, {
+const generateSignedUrl = (publicId, options = {}) => {
+  // Default options for signed URLs
+  const defaultOptions = {
     secure: true,
-    resource_type: resourceType
-  });
-};
-
-/**
- * Create a signed URL specifically for CVs and documents
- * @param {string} publicId - Public ID of the document
- * @returns {string} - Signed URL for document access
- */
-const getDocumentUrl = (publicId) => {
-  // Check if we need to add the cvs folder prefix
-  const fixedPublicId = publicId.includes('/') ? publicId : `cvs/${publicId}`;
+    resource_type: 'image', // Default to image
+    type: 'upload',
+    sign_url: true,
+    version: Math.round(new Date().getTime() / 1000) // Optional: set version to current time
+  };
   
-  return generateSignedUrl(fixedPublicId, {
-    resource_type: 'raw',
-    format: 'pdf',
-    attachment: true
-  });
+  return cloudinary.url(publicId, { ...defaultOptions, ...options });
 };
-
 // Export all the functions
 module.exports = {
   cloudinary,
-  uploadFile,
-  generateSignedUrl,
-  generateImageUrl,
-  verifyResource,
-  deleteResource,
   createUploadMiddleware,
-  fixPublicId,
-  getDirectUrl,
-  getDocumentUrl
+  deleteResource,
+  generateSignedUrl // Ensure this is exported
 };

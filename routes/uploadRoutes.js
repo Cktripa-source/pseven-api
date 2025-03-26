@@ -76,6 +76,7 @@ router.post('/:folder', upload.single('file'), (req, res, next) => {
 });
 
 // Get signed URL for a Cloudinary resource
+// Get signed URL for a Cloudinary resource
 router.get('/get-signed-url', authenticate, async (req, res) => {
   const { publicId, resourceType } = req.query;
 
@@ -83,8 +84,12 @@ router.get('/get-signed-url', authenticate, async (req, res) => {
     return res.status(400).json({ error: 'publicId and resourceType are required' });
   }
 
+  console.log('Received publicId:', publicId);
+  console.log('Received resourceType:', resourceType);
+
   try {
     const signedUrl = generateSignedUrl(publicId, { resource_type: resourceType });
+    console.log('Generated signed URL:', signedUrl);
     res.status(200).json({ url: signedUrl });
   } catch (error) {
     console.error('Error generating signed URL:', error);
