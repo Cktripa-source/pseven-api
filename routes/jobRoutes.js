@@ -1,30 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const multer = require('multer');
-const path = require('path');
 const Job = require('../models/Jobs');
 const { authenticate, hasPermission } = require('../middleware/auth');
+const { createUploadMiddleware, deleteResource } = require('../utils/cloudinary');
 
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/jobs'); // Ensure this directory exists
-  },
-  filename: (req, file, cb) => {
-    cb(null, `job-${Date.now()}${path.extname(file.originalname)}`);
-  },
-});
-
-const uploadImage = multer({
-  storage: storage,
-  limits: { fileSize: 2 * 1024 * 1024 }, // 2MB limit
-  fileFilter: (req, file, cb) => {
-    const fileTypes = /jpeg|jpg|png|gif/;
-    const isValid = fileTypes.test(path.extname(file.originalname).toLowerCase()) && fileTypes.test(file.mimetype);
-    if (isValid) return cb(null, true);
-    cb(new Error('Invalid file type. Only images are allowed.'));
-  },
-});
+// Create upload middleware specific to jobs
+const { upload, processUpload } = createUploadMiddleware('jobs');
 
 // GET: Fetch all jobs with optional filtering
 router.get('/', async (req, res) => {
@@ -65,7 +46,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // POST: Create a new job
-router.post('/', authenticate, hasPermission('canManageJobs'), uploadImage.single('image'), async (req, res) => {
+router.post('/', authenticate, hasPermission('canManageJobs'), upload.single('image'), processUpload, async (req, res) => {
   try {
     const { title, description, location, employmentType, skillsRequired, postedBy, status } = req.body;
 
@@ -86,7 +67,9 @@ router.post('/', authenticate, hasPermission('canManageJobs'), uploadImage.singl
       skillsRequired: skills,
       postedBy,
       status: status || 'Open',
-      image: req.file ? req.file.path : null, // Assuming you're using multer
+      // Handle Cloudinary image
+      image: req.cloudinaryResult ? req.cloudinaryResult.secure_url : null,
+      imagePublicId: req.cloudinaryResult ? req.cloudinaryResult.public_id : null
     };
 
     const newJob = new Job(jobData);
@@ -94,13 +77,13 @@ router.post('/', authenticate, hasPermission('canManageJobs'), uploadImage.singl
     
     res.status(201).json({ message: 'Job created successfully', job: newJob });
   } catch (error) {
-    console.error('Error creating job:', error); // Log the error
+    console.error('Error creating job:', error);
     res.status(500).json({ message: 'Failed to create job', error: error.message });
   }
 });
 
 // PUT: Update a specific job by ID
-router.put('/:id', authenticate, hasPermission('canManageJobs'), uploadImage.single('image'), async (req, res) => {
+router.put('/:id', authenticate, hasPermission('canManageJobs'), upload.single('image'), processUpload, async (req, res) => {
   try {
     const existingJob = await Job.findById(req.params.id);
     if (!existingJob) return res.status(404).json({ message: 'Job not found' });
@@ -121,11 +104,22 @@ router.put('/:id', authenticate, hasPermission('canManageJobs'), uploadImage.sin
     if (status !== undefined) updateData.status = status;
 
     // Handle image upload if provided
-    if (req.file) {
-      updateData.image = req.file.path; // Assuming you're using multer
+    if (req.cloudinaryResult) {
+      // Delete old image from Cloudinary if exists
+      if (existingJob.imagePublicId) {
+        try {
+          await deleteResource(existingJob.imagePublicId);
+        } catch (deleteError) {
+          console.error('Error deleting old image:', deleteError);
+        }
+      }
+      
+      // Update with new Cloudinary URL and public_id
+      updateData.image = req.cloudinaryResult.secure_url;
+      updateData.imagePublicId = req.cloudinaryResult.public_id;
     }
 
-    const updatedJob = await Job.findByIdAndUpdate(req.params.id, updateData, { new: true }); // Return the updated document
+    const updatedJob = await Job.findByIdAndUpdate(req.params.id, updateData, { new: true });
     res.status(200).json({ message: 'Job updated successfully', job: updatedJob });
   } catch (err) {
     console.error('Error updating job:', err);
@@ -139,6 +133,12 @@ router.delete('/:id', authenticate, hasPermission('canManageJobs'), async (req, 
     const job = await Job.findById(req.params.id);
     if (!job) {
       return res.status(404).json({ message: 'Job not found' });
+    }
+
+    // Remove image from Cloudinary if exists
+    if (job.imagePublicId) {
+      console.log('Deleting job image with public_id:', job.imagePublicId);
+      await deleteResource(job.imagePublicId);
     }
 
     // Delete the job from the database
