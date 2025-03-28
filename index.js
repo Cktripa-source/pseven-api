@@ -90,7 +90,7 @@ if (!isProduction) {
 const { authLimiter, apiLimiter } = require('./middleware/rateLimiter');
 app.use('/api', apiLimiter);
 
-// Connect to MongoDB with improved error handling
+// Connect to MongoDB with improved error handling and M0 cluster prevention
 const connectDB = async () => {
   try {
     const mongoURI = process.env.MONGODB_CONNECT_URI;
@@ -98,18 +98,71 @@ const connectDB = async () => {
       throw new Error('MONGODB_URI is not defined in environment variables');
     }
 
-    logger.info('Connecting to MongoDB...');
-    await mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true });
-    logger.info('MongoDB connected successfully');
+    const connectionOptions = {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      retryWrites: true,
+      maxPoolSize: 10, // Manage connection pool
+      serverSelectionTimeoutMS: 10000, // Increased timeout
+      socketTimeoutMS: 45000,
+    };
+
+    // Connection event listeners
+    mongoose.connection.on('connecting', () => {
+      logger.info('Attempting to connect to MongoDB...');
+    });
+
+    mongoose.connection.on('connected', () => {
+      logger.info('Successfully connected to MongoDB');
+      
+      // Periodic activity check to prevent M0 cluster pausing
+      const keepAlive = async () => {
+        try {
+          // Lightweight operation to keep cluster active
+          await mongoose.connection.db.admin().ping();
+          logger.info('MongoDB cluster kept alive');
+        } catch (error) {
+          logger.warn('Failed to ping MongoDB cluster', error);
+        }
+      };
+
+      // Run keep-alive check every 6 days
+      const keepAliveInterval = setInterval(keepAlive, 6 * 24 * 60 * 60 * 1000);
+
+      // Ensure interval is cleared on disconnect
+      mongoose.connection.on('disconnected', () => {
+        clearInterval(keepAliveInterval);
+      });
+    });
+
+    mongoose.connection.on('disconnected', () => {
+      logger.warn('MongoDB connection lost. Attempting to reconnect...');
+    });
+
+    mongoose.connection.on('error', (err) => {
+      logger.error(`MongoDB connection error: ${err.message}`);
+      // Implement reconnection strategy
+      setTimeout(connectDB, 5000); // Retry after 5 seconds
+    });
+
+    // Connect to MongoDB
+    await mongoose.connect(mongoURI, connectionOptions);
   } catch (err) {
-    logger.error(`MongoDB connection error: ${err.message}`);
-    process.exit(1); // Exit with failure
+    logger.error(`Fatal MongoDB connection error: ${err.message}`);
+    
+    // Implement exponential backoff for reconnection
+    const reconnectWithBackoff = (retries = 0) => {
+      const delay = Math.min(30000, Math.pow(2, retries) * 1000);
+      setTimeout(() => {
+        logger.info(`Attempting to reconnect (Retry ${retries + 1})`);
+        connectDB().catch(() => reconnectWithBackoff(retries + 1));
+      }, delay);
+    };
+
+    // If initial connection fails, start reconnection strategy
+    reconnectWithBackoff();
   }
 };
-
-// Immediately invoke connectDB
-connectDB();
-
 // Define routes
 app.use('/api/auth/login', authLimiter, loginRoutes);
 app.use('/api/auth', authRoutes);
