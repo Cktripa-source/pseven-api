@@ -120,7 +120,7 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api', productRoutes);
-app.use('/api/services', serviceRoutes);
+app.use('/api', serviceRoutes);
 app.use('/api', defaultRoutes);
 app.use('/api/uploads', uploadRoutes);
 
