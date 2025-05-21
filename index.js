@@ -23,7 +23,9 @@ const uploadRoutes = require('./routes/uploadRoutes');
 
 // Initialize Express app
 const app = express();
-
+app.get('/',(req,res)=>{
+  res.send("hello pazzo")
+});
 // Environment check
 const isProduction = process.env.NODE_ENV === 'production';
 
